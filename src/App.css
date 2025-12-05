@@ -3,11 +3,10 @@
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #fe4e22;
 }
 
 .sprite {
-  height: 400px;
+  height: 300px;
   image-rendering: pixelated;
   margin: 50px;
 }
