@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStopwatch } from './Stopwatch';
+import { getTimeString, useStopwatch } from './Stopwatch';
 import './App.css'
 
 type Pokemon = {
@@ -19,7 +19,7 @@ const NULL_POKEMON: Pokemon = {
 const API_URL: string = 'https://pokeapi.co/api/v2/pokemon-species?limit=9999';
 
 function App() {
-  const { TIME_INTERVAL, isTimerRunning, elapsedTime, startTimer, stopTimer, resetTimer } = useStopwatch();
+  const { elapsedTime, startTimer, stopTimer, resetTimer } = useStopwatch();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pokemonData, setPokemonData] = useState<Pokemon[]>([]);
   const [currentPokemon, setCurrentPokemon] = useState(NULL_POKEMON);
@@ -97,6 +97,7 @@ function App() {
 
   const onCorrectGuess = () => {
     revealPokemon();
+    console.log(elapsedTime);
   };
 
   const onWrongGuess = () => {
@@ -125,7 +126,7 @@ function App() {
         </div>
       </div>
 
-      <p className='time-data'>{`${Math.floor(elapsedTime / TIME_INTERVAL * 10)}.${(elapsedTime % (TIME_INTERVAL / 10))}`}</p>
+      <p className='time-data'>{getTimeString(elapsedTime)}</p>
     </>
   )
 }

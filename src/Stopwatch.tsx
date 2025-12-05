@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 
 const TIME_INTERVAL: number = 100;
 
+export const getTimeString = (time: number) => {
+  return `${Math.floor(time / TIME_INTERVAL * 10)}.${(time % (TIME_INTERVAL / 10))}`;
+};
+
 export function useStopwatch() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -31,5 +35,5 @@ export function useStopwatch() {
     setElapsedTime(0);
   };
 
-  return { TIME_INTERVAL, isTimerRunning, elapsedTime, startTimer, stopTimer, resetTimer };
+  return { elapsedTime, startTimer, stopTimer, resetTimer };
 }
