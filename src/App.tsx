@@ -25,6 +25,8 @@ function App() {
     guessEntry,
     elapsedTime,
     bestTime,
+    totalGuesses,
+    correctGuesses,
     getSpriteUrl,
     getTimeString,
     startTimer,
@@ -90,8 +92,13 @@ function App() {
         />
         <button onClick={checkGuess} disabled={!isAwaitingAnswer}>Submit</button>
 
-        <p className='time-data'>{`Time: ${getTimeString(elapsedTime)} sec`}</p>
-        <p className='time-data'>{`Best Time: ${getTimeString(bestTime)} sec`}</p>
+        <div className='stats-container'>
+          <h2>Statistics</h2>
+          <p>{`Guess Time: ${getTimeString(elapsedTime)} sec`}</p>
+          <p>{`Best Time: ${getTimeString(bestTime)} sec`}</p>
+          <p>{`Correct Guesses: ${correctGuesses}`}</p>
+          <p>{`Total Guesses: ${totalGuesses}`}</p>
+        </div>
 
         <div className='control-buttons'>
           <button onClick={revealPokemon} disabled={!isAwaitingAnswer}>Reveal</button>

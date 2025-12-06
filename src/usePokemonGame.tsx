@@ -20,9 +20,14 @@ const NULL_POKEMON: Pokemon = {
   name: 'MISSINGNO.',
 };
 
-const BEST_TIME_KEY = "BestTime";
-
 const MIN_SPELLING_MATCH = 0.75;
+
+const STATS_KEY = "GameStats";
+type GameStats = {
+  bestTime: number;
+  totalGuesses: number;
+  correctGuesses: number;
+};
 
 const gameClient = new GameClient();
 const pokeClient = new PokemonClient();
@@ -38,10 +43,13 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   const [isWrongMsgActive, setIsWrongMsgActive] = useState(false);
   const [guessEntry, setGuessEntry] = useState("");
 
-  const { elapsedTime, startTimer, stopTimer, resetTimer } = useStopwatch();
-  const [bestTime, setBestTime] = useState(() => {
-    const saved = localStorage.getItem(BEST_TIME_KEY);
-    return saved ? Number(saved) : -1;
+  const {elapsedTime, startTimer, stopTimer, resetTimer} = useStopwatch();
+  const [stats, setStats] = useState<GameStats>(() => {
+    const saved = localStorage.getItem(STATS_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return { bestTime: -1, totalGuesses: 0, correctGuesses: 0 };
   });
 
   useEffect(() => {
@@ -74,6 +82,14 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
       inputRef.current.focus();
     }
   }, [isAwaitingAnswer, currentPokemon]);
+
+  const updateStats = (newStats: Partial<GameStats>) => {
+    setStats(prev => {
+      const updated = { ...prev, ...newStats };
+      localStorage.setItem(STATS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const getRandPokemon = async () => {
     // Get list of selected generations to pull Pokemon from
@@ -166,6 +182,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
         onWrongGuess();
       }
     }
+    updateStats({totalGuesses: stats.totalGuesses + 1});
   };
 
   const onCorrectGuess = () => {
@@ -173,11 +190,13 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     setIsWrongMsgActive(false);
     setIsAwaitingAnswer(false);
     console.log(`Guess time: ${elapsedTime}`);
-    if (bestTime < 0 || elapsedTime < bestTime) {
-      setBestTime(elapsedTime);
-      localStorage.setItem(BEST_TIME_KEY, String(elapsedTime));
+
+    let newStats: Partial<GameStats> = {correctGuesses: stats.correctGuesses + 1};
+    if (stats.bestTime < 0 || elapsedTime < stats.bestTime) {
+      newStats.bestTime = elapsedTime;
       console.log(`New best time: ${elapsedTime}`);
     }
+    updateStats(newStats);
   };
 
   const onWrongGuess = () => {
@@ -192,7 +211,9 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     isWrongMsgActive,
     guessEntry,
     elapsedTime,
-    bestTime,
+    bestTime: stats.bestTime,
+    totalGuesses: stats.totalGuesses,
+    correctGuesses: stats.correctGuesses,
     getSpriteUrl,
     getTimeString,
     startTimer,
