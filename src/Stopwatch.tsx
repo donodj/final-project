@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from "react";
 const TIME_INTERVAL: number = 100;
 
 export const getTimeString = (time: number) => {
+  if (time < 0) {
+    return "--.--";
+  }
   return `${Math.floor(time / TIME_INTERVAL * 10)}.${(time % (TIME_INTERVAL / 10))}`;
 };
 

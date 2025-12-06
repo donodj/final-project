@@ -18,7 +18,7 @@ type Props = {
   setGameSettings: React.Dispatch<React.SetStateAction<GameSettingsState>>;
 }
 
-const GameSettings: React.FC<Props> = ({gameSettings, setGameSettings}) => {
+function GameSettings({gameSettings, setGameSettings}: Props) {
   const handleGenChange = (idx: number) => {
     setGameSettings(prev => ({
       ...prev,

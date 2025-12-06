@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Globals } from './Globals';
 import { usePokemonGame } from './usePokemonGame';
-import GameSettings, { Difficulty } from './GameSettings';
-import type { GameSettingsState } from './GameSettings';
+import GameSettings, { Difficulty, type GameSettingsState } from './GameSettings';
 import './App.css'
 
 const GAME_SETTINGS_KEY = "GameSettings";
@@ -92,7 +91,7 @@ function App() {
         <button onClick={checkGuess} disabled={!isAwaitingAnswer}>Submit</button>
 
         <p className='time-data'>{`Time: ${getTimeString(elapsedTime)} sec`}</p>
-        <p className='time-data'>{`Best Time: ${bestTime >= 0 ? getTimeString(bestTime) : "--.--"} sec`}</p>
+        <p className='time-data'>{`Best Time: ${getTimeString(bestTime)} sec`}</p>
 
         <div className='control-buttons'>
           <button onClick={revealPokemon} disabled={!isAwaitingAnswer}>Reveal</button>
