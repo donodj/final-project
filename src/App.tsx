@@ -57,7 +57,7 @@ function App() {
   return (
     <>
       <header>
-        <img className='title' src='src/assets/title.png'></img>
+        <img className='title' src='/final-project/assets/title.png'></img>
       </header>
 
       <div className='game-container'>
