@@ -20,7 +20,7 @@ export function Settings() {
     // Load settings if there are saved settings
     return saved
       ? JSON.parse(saved)
-      : { selectedGens: Array(GENERATIONS).fill(true), Difficulty: Difficulty.Normal };
+      : { selectedGens: Array(GENERATIONS).fill(true), difficulty: Difficulty.Normal };
   });
 
   // Save settings when changed
