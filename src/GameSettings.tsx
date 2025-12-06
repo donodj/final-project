@@ -1,35 +1,25 @@
-import { useEffect, useState } from "react";
+import type React from "react";
+import { Globals } from "./Globals";
 
-const Difficulty = {
+export const Difficulty = {
   Easy: 0,
   Normal: 1,
   Hard: 2
-};
+} as const;
 
-type SettingsState = {
+export type GameSettingsState = {
   selectedGens: Array<boolean>,
   difficulty: number
+};
+
+type Props = {
+  gameSettings: GameSettingsState;
+  setGameSettings: React.Dispatch<React.SetStateAction<GameSettingsState>>;
 }
 
-const GENERATIONS: number = 9;
-const SETTINGS_KEY = "AppSettings"
-
-export function Settings() {
-  const [settings, setSettings] = useState<SettingsState>(() => {
-    const saved = localStorage.getItem(SETTINGS_KEY);
-    // Load settings if there are saved settings
-    return saved
-      ? JSON.parse(saved)
-      : { selectedGens: Array(GENERATIONS).fill(true), difficulty: Difficulty.Normal };
-  });
-
-  // Save settings when changed
-  useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  }, [settings]);
-
+const GameSettings: React.FC<Props> = ({gameSettings, setGameSettings}) => {
   const handleGenChange = (idx: number) => {
-    setSettings(prev => ({
+    setGameSettings(prev => ({
       ...prev,
       selectedGens: prev.selectedGens.map((val, i) => (i === idx ? !val : val))
     }));
@@ -37,7 +27,7 @@ export function Settings() {
   };
 
   const handleDifficultyChange = (newDiff: number) => {
-    setSettings(prev => ({
+    setGameSettings(prev => ({
       ...prev,
       difficulty: newDiff
     }));
@@ -50,11 +40,11 @@ export function Settings() {
 
       <h4>Generation</h4>
       <div className="gen-settings">
-        {Array.from({length: GENERATIONS}, (_, idx) => (
+        {Array.from({length: Globals.MAX_GEN}, (_, idx) => (
           <label key={idx}>
             <input
               type="checkbox"
-              checked={settings.selectedGens[idx]}
+              checked={gameSettings.selectedGens[idx]}
               onChange={() => handleGenChange(idx)}
             />
             Gen {idx + 1}
@@ -71,7 +61,7 @@ export function Settings() {
                 type="radio"
                 name="difficulty"
                 value={val}
-                checked={settings.difficulty === val}
+                checked={gameSettings.difficulty === val}
                 onChange={() => handleDifficultyChange(val)}
               />
               {key}
@@ -81,4 +71,6 @@ export function Settings() {
       </div>
     </div>
   );
-}
+};
+
+export default GameSettings;
