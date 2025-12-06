@@ -12,18 +12,20 @@ function App() {
     const saved = localStorage.getItem(GAME_SETTINGS_KEY);
     return saved
       ? JSON.parse(saved)
-      : { selectedGens: Array(Globals.MAX_GEN).fill(true), difficulty: Difficulty.Normal };
+      : { selectedGens: Array(Globals.MAX_GEN).fill(true), difficulty: Difficulty.Normal, isExactSpelling: false };
   });
 
   const [isImgLoaded, setIsImgLoaded] = useState(false);
 
   const {
     inputRef,
-    elapsedTime,
     currentPokemon,
     isPokemonHidden,
-    guessEntry,
     isAwaitingAnswer,
+    isWrongMsgActive,
+    guessEntry,
+    elapsedTime,
+    bestTime,
     getSpriteUrl,
     getTimeString,
     startTimer,
@@ -76,6 +78,7 @@ function App() {
       </div>
 
       <div className='submit-container'>
+        <p style={{visibility: isAwaitingAnswer && isWrongMsgActive ? 'visible' : 'hidden'}}>Try again!</p>
         <input
           value={guessEntry}
           onChange={handleGuessEntryChange}
@@ -89,6 +92,7 @@ function App() {
         <button onClick={checkGuess} disabled={!isAwaitingAnswer}>Submit</button>
 
         <p className='time-data'>{`Time: ${getTimeString(elapsedTime)} sec`}</p>
+        <p className='time-data'>{`Best Time: ${bestTime >= 0 ? getTimeString(bestTime) : "--.--"} sec`}</p>
 
         <div className='control-buttons'>
           <button onClick={revealPokemon} disabled={!isAwaitingAnswer}>Reveal</button>

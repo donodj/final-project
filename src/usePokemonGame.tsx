@@ -3,6 +3,7 @@ import { Globals } from './Globals';
 import { getTimeString, useStopwatch } from './Stopwatch';
 import { Difficulty, type GameSettingsState } from './GameSettings';
 import { GameClient, PokemonClient } from 'pokenode-ts';
+import levenshtein from 'js-levenshtein';
 
 export type Pokemon = {
   id: number;
@@ -19,17 +20,29 @@ const NULL_POKEMON: Pokemon = {
   name: 'MISSINGNO.',
 };
 
+const BEST_TIME_KEY = "BestTime";
+
+const MIN_SPELLING_MATCH = 0.75;
+
 const gameClient = new GameClient();
 const pokeClient = new PokemonClient();
 
 export function usePokemonGame(gameSettings: GameSettingsState) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const { elapsedTime, startTimer, stopTimer, resetTimer } = useStopwatch();
+  
   const pokemonGens = useRef<Pokemon[][]>([]);
+  
   const [currentPokemon, setCurrentPokemon] = useState(NULL_POKEMON);
   const [isPokemonHidden, setIsPokemonHidden] = useState(true);
   const [isAwaitingAnswer, setIsAwaitingAnswer] = useState(false);
+  const [isWrongMsgActive, setIsWrongMsgActive] = useState(false);
   const [guessEntry, setGuessEntry] = useState("");
+
+  const { elapsedTime, startTimer, stopTimer, resetTimer } = useStopwatch();
+  const [bestTime, setBestTime] = useState(() => {
+    const saved = localStorage.getItem(BEST_TIME_KEY);
+    return saved ? Number(saved) : -1;
+  });
 
   useEffect(() => {
     const initializePokemonLists = async () => {
@@ -55,6 +68,12 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
     initializePokemonLists();
   }, []);
+
+  useEffect(() => {
+    if (isAwaitingAnswer && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAwaitingAnswer, currentPokemon]);
 
   const getRandPokemon = async () => {
     // Get list of selected generations to pull Pokemon from
@@ -112,6 +131,8 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
       setGuessEntry("");
     }
 
+    setIsWrongMsgActive(false);
+
     resetTimer();
     // startTimer();
     setIsAwaitingAnswer(true);
@@ -123,33 +144,55 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
   const checkGuess = () => {
     // Remove all whitespace and hyphens
-    let formattedName = currentPokemon.name.replace(/[\s-]+/g, "").trim().toLowerCase();
+    let formattedName = currentPokemon.name.replace(/-(f|m)$/, "").replace(/[\s-]+/g, "").trim().toLowerCase();
     let formattedGuess = guessEntry.replace(/[\s-]+/g, "").trim().toLowerCase();
 
-    if (formattedName === formattedGuess) {
-      onCorrectGuess();
+    if (gameSettings.isExactSpelling) {
+      if (formattedName === formattedGuess) {
+        onCorrectGuess();
+      } else {
+        onWrongGuess();
+      }
+
     } else {
-      onWrongGuess();
+      // Determine if the strings are close enough in spelling
+      const maxLen = Math.max(formattedName.length, formattedGuess.length);
+      const dist = levenshtein(formattedName, formattedGuess);
+      const matchRatio = (maxLen - dist) / maxLen;
+      console.log(`${matchRatio} of guess characters matched name`);
+      if (matchRatio >= MIN_SPELLING_MATCH) {
+        onCorrectGuess();
+      } else {
+        onWrongGuess();
+      }
     }
   };
 
   const onCorrectGuess = () => {
     revealPokemon();
+    setIsWrongMsgActive(false);
     setIsAwaitingAnswer(false);
     console.log(`Guess time: ${elapsedTime}`);
+    if (bestTime < 0 || elapsedTime < bestTime) {
+      setBestTime(elapsedTime);
+      localStorage.setItem(BEST_TIME_KEY, String(elapsedTime));
+      console.log(`New best time: ${elapsedTime}`);
+    }
   };
 
   const onWrongGuess = () => {
-    ;
+    setIsWrongMsgActive(true);
   };
 
   return {
     inputRef,
-    elapsedTime,
     currentPokemon,
     isPokemonHidden,
-    guessEntry,
     isAwaitingAnswer,
+    isWrongMsgActive,
+    guessEntry,
+    elapsedTime,
+    bestTime,
     getSpriteUrl,
     getTimeString,
     startTimer,

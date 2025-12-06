@@ -12,7 +12,7 @@ export const Globals = {
   getFormattedPokemonName: (name: string) => {
     return name
       // Remove gender tag
-      .replaceAll("-f", "").replaceAll("-m", "")
+      .replace(/-(f|m)$/, "")
       // Replace hyphens with space
       .replaceAll("-", " ")
       // Capitalize each word
