@@ -10,6 +10,12 @@ export type Pokemon = {
   name: string;
 }
 
+export const GuessOutcome = {
+  Unset: 0,
+  Correct: 1,
+  Wrong: 2
+} as const
+
 const getSpriteUrl = (pokemon: Pokemon) => {
   const spriteId = Math.max(pokemon.id, 0);
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${spriteId}.png`;
@@ -29,6 +35,8 @@ type GameStats = {
   correctGuesses: number;
 };
 
+const DEFAULT_STATS = {bestTime: -1, totalGuesses: 0, correctGuesses: 0};
+
 const gameClient = new GameClient();
 const pokeClient = new PokemonClient();
 
@@ -40,7 +48,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   const [currentPokemon, setCurrentPokemon] = useState(NULL_POKEMON);
   const [isPokemonHidden, setIsPokemonHidden] = useState(true);
   const [isAwaitingAnswer, setIsAwaitingAnswer] = useState(false);
-  const [isWrongMsgActive, setIsWrongMsgActive] = useState(false);
+  const [guessOutcome, setGuessOutcome] = useState<typeof GuessOutcome[keyof typeof GuessOutcome]>(GuessOutcome.Unset);
   const [guessEntry, setGuessEntry] = useState("");
 
   const {elapsedTime, startTimer, stopTimer, resetTimer} = useStopwatch();
@@ -49,7 +57,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     if (saved) {
       return JSON.parse(saved);
     }
-    return { bestTime: -1, totalGuesses: 0, correctGuesses: 0 };
+    return DEFAULT_STATS;
   });
 
   useEffect(() => {
@@ -91,6 +99,11 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     });
   };
 
+  const resetStats = () => {
+    localStorage.removeItem(STATS_KEY);
+    setStats(DEFAULT_STATS);
+  };
+
   const getRandPokemon = async () => {
     // Get list of selected generations to pull Pokemon from
     let genChoices: number[] = [];
@@ -124,6 +137,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   const revealPokemon = () => {
     setIsPokemonHidden(false);
     setIsAwaitingAnswer(false);
+    setGuessOutcome(GuessOutcome.Unset);
     stopTimer();
   }
 
@@ -147,7 +161,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
       setGuessEntry("");
     }
 
-    setIsWrongMsgActive(false);
+    setGuessOutcome(GuessOutcome.Unset);
 
     resetTimer();
     // startTimer();
@@ -187,7 +201,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
   const onCorrectGuess = () => {
     revealPokemon();
-    setIsWrongMsgActive(false);
+    setGuessOutcome(GuessOutcome.Correct);
     setIsAwaitingAnswer(false);
     console.log(`Guess time: ${elapsedTime}`);
 
@@ -200,7 +214,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   };
 
   const onWrongGuess = () => {
-    setIsWrongMsgActive(true);
+    setGuessOutcome(GuessOutcome.Wrong);
   };
 
   return {
@@ -208,7 +222,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     currentPokemon,
     isPokemonHidden,
     isAwaitingAnswer,
-    isWrongMsgActive,
+    guessOutcome,
     guessEntry,
     elapsedTime,
     bestTime: stats.bestTime,
@@ -219,6 +233,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     startTimer,
     stopTimer,
     resetTimer,
+    resetStats,
     isPokemonValid,
     revealPokemon,
     loadNewPokemon,

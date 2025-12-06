@@ -1,26 +1,117 @@
+.header {
+  margin-bottom: 60px;
+}
+
+.title {
+  width: 800px;
+  margin-top: 10px;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 120px;
+  margin: 0px;
+}
+
+.pokemon-view {
+  flex: 1;
+}
+
 .sprite-container {
+  position: relative;
+  z-index: -2;
+}
+
+.sprite-container::before {
+  content: '';
+  position: absolute;
+  top: -180px; left: -180px; right: -180px; bottom: -180px;
   background-image: url(assets/glow.png);
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .sprite {
   height: 300px;
   image-rendering: pixelated;
-  margin: 50px;
 }
-
-
-
-
 
 .overlay-text {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-weight: bold;
   font-size: 40px;
-  color: black;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 30px;
+  border-radius: 50px;
+}
+
+.pokemon-name {
+  font-size: 35px;
+  margin: 0;
+  margin-top: 20px;
+  text-align: center;
+  overflow-wrap: break-word;
+  white-space: normal;
+  width: 100%;
+}
+
+.submit-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.guess-container {
+  display: flex;
+  gap: 20px;
+}
+
+.correct-guess-txt {
+  color: rgb(30, 255, 0);
+  font-size: 20px;
+  margin: 0;
+}
+.wrong-guess-txt {
+  color: rgb(255, 196, 0);
+  font-size: 20px;
+  margin: 0;
+}
+
+.guess-input {
+  border-radius: 10px;
+  height: 40px;
+  width: 250px;
+  font-size: 15px;
+  align-self: center;
+}
+
+.stats-container {
+  background-color: rgba(230, 185, 104, 0.637);
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.438);
+  border-radius: 10px;
+  width: 200px;
+  padding: 15px 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.stats-container > h2, p {
+  text-align: left;
+  margin: 0;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 20px;
 }

@@ -1,10 +1,11 @@
 import type React from "react";
 import { Globals } from "./Globals";
+import "./GameSettings.css";
 
 export const Difficulty = {
   Easy: 0,
   Normal: 1,
-  Hard: 2
+  // Hard: 2
 } as const;
 
 export type GameSettingsState = {
@@ -16,9 +17,10 @@ export type GameSettingsState = {
 type Props = {
   gameSettings: GameSettingsState;
   setGameSettings: React.Dispatch<React.SetStateAction<GameSettingsState>>;
+  clearData: () => void;
 }
 
-function GameSettings({gameSettings, setGameSettings}: Props) {
+function GameSettings({gameSettings, setGameSettings, clearData}: Props) {
   const handleGenChange = (idx: number) => {
     setGameSettings(prev => ({
       ...prev,
@@ -45,13 +47,16 @@ function GameSettings({gameSettings, setGameSettings}: Props) {
 
   return (
     <div className="settings-container">
-      <h2>Settings</h2>
+      <h1 className="settings-title">Settings</h1>
 
-      <h4>Generation</h4>
+      <hr></hr>
+
+      <h2 className="setting-header">Generations</h2>
       <div className="gen-buttons">
         {Array.from({length: Globals.MAX_GEN}, (_, idx) => (
           <label key={idx}>
             <input
+              className="check-button"
               type="checkbox"
               checked={gameSettings.selectedGens[idx]}
               onChange={() => handleGenChange(idx)}
@@ -61,12 +66,15 @@ function GameSettings({gameSettings, setGameSettings}: Props) {
         ))}
       </div>
 
-      <h4>Difficulty</h4>
+      <hr></hr>
+
+      <h2 className="setting-header">Difficulty</h2>
       <div className="difficulty-buttons">
         {Object.entries(Difficulty).map(([key, val]) =>
           typeof val === "number" ? (
             <label key={val}>
               <input
+                className="radio-button"
                 type="radio"
                 name="difficulty"
                 value={val}
@@ -79,12 +87,22 @@ function GameSettings({gameSettings, setGameSettings}: Props) {
         )}
       </div>
 
-      <h4>Exact Spelling</h4>
-      <input
-        type="checkbox"
-        checked={gameSettings.isExactSpelling}
-        onChange={() => handleSpellingChange(!gameSettings.isExactSpelling)}
-      />
+      <hr></hr>
+
+      <h2 className="setting-header">Exact Spelling</h2>
+      <label>
+        <input
+          className="check-button"
+          type="checkbox"
+          checked={gameSettings.isExactSpelling}
+          onChange={() => handleSpellingChange(!gameSettings.isExactSpelling)}
+        />
+        On
+      </label>
+
+      <hr></hr>
+
+      <button className="reset-button" onClick={clearData}>Clear Data</button>
     </div>
   );
 };
