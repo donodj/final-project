@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getTimeString, useStopwatch } from './Stopwatch';
+import { Settings } from './Settings';
 import './App.css'
 
 type Pokemon = {
@@ -127,6 +128,8 @@ function App() {
       </div>
 
       <p className='time-data'>{getTimeString(elapsedTime)}</p>
+
+      <Settings></Settings>
     </>
   )
 }
