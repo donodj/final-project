@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Globals } from './Globals';
 import { getTimeString, useStopwatch } from './Stopwatch';
 import { Difficulty, type GameSettingsState } from './GameSettings';
-import { GameClient } from 'pokenode-ts';
+import { GameClient, PokemonClient } from 'pokenode-ts';
 import levenshtein from 'js-levenshtein';
 
 export type Pokemon = {
@@ -30,7 +30,9 @@ const NULL_POKEMON: Pokemon = {
 
 const MIN_SPELLING_MATCH = 0.75;
 
+const GENS_KEY = "pokemonGens";
 const STATS_KEY = "GameStats";
+
 type GameStats = {
   bestTime: number;
   totalGuesses: number;
@@ -40,13 +42,16 @@ type GameStats = {
 const DEFAULT_STATS = {bestTime: -1, totalGuesses: 0, correctGuesses: 0};
 
 const gameClient = new GameClient();
-// const pokeClient = new PokemonClient();
+const pokeClient = new PokemonClient();
 
 export function usePokemonGame(gameSettings: GameSettingsState) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const pokemonGens = useRef<Pokemon[][]>([]);
-
+  const [pokemonGens, setPokemonGens] = useState<Pokemon[][]>(() => {
+    // Get data from session storage if it exists, else an empty array
+    const saved = sessionStorage.getItem(GENS_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
   const [currentPokemon, setCurrentPokemon] = useState(NULL_POKEMON);
   const [isPokemonHidden, setIsPokemonHidden] = useState(true);
   const [isAwaitingAnswer, setIsAwaitingAnswer] = useState(false);
@@ -64,14 +69,14 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
   useEffect(() => {
     const initializePokemonLists = async () => {
+      setPokemonGens([]);
       console.log('Getting Pokemon lists...');
 
-      pokemonGens.current = [];
+      let newGens: Pokemon[][] = [];
 
       // Get a list for each selected gen
       for (let i = 0; i < Globals.MAX_GEN; i++) {
         const genData = await gameClient.getGenerationById(i + 1);
-
         const newList: Pokemon[] = genData.pokemon_species.map((item: any, _) => ({
           // Id and cry are set later to save on API calls
           id: -1,
@@ -79,16 +84,19 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
           cry: "",
         }));
         console.log(`Gen ${i + 1}: ${newList.length} Pokemon`);
-        pokemonGens.current.push(newList);
+        newGens.push(newList);
       }
-
-      loadNewPokemon();
-      console.log(pokemonGens.current);
+      console.log("New Pokemon list:", newGens);
+      sessionStorage.setItem(GENS_KEY, JSON.stringify(newGens));
+      setPokemonGens(newGens);
     };
 
-    if (pokemonGens.current.length <= 0) {
+    if (pokemonGens.length > 0) {
+      console.log('Found existing Pokemon data in sessionStorage');
+    } else {
       initializePokemonLists();
     }
+    loadNewPokemon();
   }, []);
 
   useEffect(() => {
@@ -125,22 +133,23 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
     console.log(`Choosing Pokemon from Gen ${randIdx + 1}`)
     // Get random Pokemon in that generation
-    const randPokemon = Globals.randomArrElement(pokemonGens.current[randIdx]);
+    const randPokemon = Globals.randomArrElement(pokemonGens[randIdx]);
 
     // If failed to pick, return null pokemon
     if (randPokemon === null) {
       return NULL_POKEMON;
     }
 
-    // Set id and cry if not already set
-    if (randPokemon.id < 0 || randPokemon.cry === "") {
-      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randPokemon.name}`);
-      const data = await response.json();
-
+    // Set id if not already set
+    if (randPokemon.id < 0) {
+      const data = await pokeClient.getPokemonSpeciesByName(randPokemon.name);
       randPokemon.id = data.id;
+    }
 
-      const cries = data.cries;
-      const cryUrl = cries?.latest || cries?.legacy;
+    if (randPokemon.cry === "") {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randPokemon.id}`);
+      const data = await response.json();
+      const cryUrl = data.cries?.latest || data.cries?.legacy;
       if (cryUrl) randPokemon.cry = cryUrl;
     }
       return randPokemon;
@@ -160,28 +169,30 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   const loadNewPokemon = async () => {
     console.log('Getting new Pokemon...');
 
+    if (!gameSettings.selectedGens.includes(true)) {
+      alert("Please select at least one Generation!");
+      return;
+    }
+
     const newPokemon = await getRandPokemon();
 
     if (!isPokemonValid(newPokemon)) {
-      console.log("Tried setting to a null pokemon");
-      alert("Please select at least one Generation!")
+      console.error("Tried setting to a null pokemon");
+      alert("Error while loading Pokemon");
       return;
     }
 
     setCurrentPokemon(newPokemon);
-
     // Hide the Pokemon if not in easy difficulty
-    setIsPokemonHidden(gameSettings.difficulty != Difficulty.Easy);
-
+    setIsPokemonHidden(gameSettings.difficulty !== Difficulty.Easy);
+    setGuessOutcome(GuessOutcome.Unset);
+    setIsAwaitingAnswer(true);
     if (inputRef.current){
       setGuessEntry("");
     }
 
-    setGuessOutcome(GuessOutcome.Unset);
-
     resetTimer();
     // startTimer();
-    setIsAwaitingAnswer(true);
   };
 
   const playPokemonCry = () => {
