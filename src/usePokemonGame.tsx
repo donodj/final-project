@@ -197,9 +197,10 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
   };
 
   const checkGuess = () => {
-    // Remove all whitespace and hyphens
-    let formattedName = currentPokemon.name.replace(/-(f|m)$/, "").replace(/[\s-]+/g, "").trim().toLowerCase();
-    let formattedGuess = guessEntry.replace(/[\s-]+/g, "").trim().toLowerCase();
+    // Remove gender tags, whitespace and hyphens
+    let formattedName = currentPokemon.name.replace(/-(f|m)$/, "").replace(/[\s-]+/g, "").toLowerCase();
+    // Remove whitespace, hyphens, and periods
+    let formattedGuess = guessEntry.replace(/[\s-.]+/g, "").toLowerCase();
 
     if (gameSettings.isExactSpelling) {
       if (formattedName === formattedGuess) {
