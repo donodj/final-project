@@ -112,7 +112,11 @@ function App() {
               placeholder='Guess the name...'
               ref={inputRef}
             />
-            <button className='sound-button' onClick={playPokemonCry}>🔊</button>
+            <button
+              className='sound-button'
+              onClick={playPokemonCry}
+              disabled={currentPokemon.cry === ""}
+            >🔊</button>
             <button onClick={checkGuess} disabled={!isAwaitingAnswer}>Submit</button>
           </div>
 
