@@ -93,11 +93,15 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
 
     if (pokemonGens.length > 0) {
       console.log('Found existing Pokemon data in sessionStorage');
+      loadNewPokemon();
     } else {
       initializePokemonLists();
     }
-    loadNewPokemon();
   }, []);
+
+  useEffect(() => {
+    loadNewPokemon();
+  }, [pokemonGens]);
 
   useEffect(() => {
     if (isAwaitingAnswer && inputRef.current) {
