@@ -91,16 +91,17 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
       setPokemonGens(newGens);
     };
 
-    if (pokemonGens.length > 0) {
+    if (sessionStorage.getItem(GENS_KEY) !== null) {
       console.log('Found existing Pokemon data in sessionStorage');
-      loadNewPokemon();
     } else {
       initializePokemonLists();
     }
   }, []);
 
   useEffect(() => {
-    loadNewPokemon();
+    if (pokemonGens.length > 0) {
+      loadNewPokemon();
+    }
   }, [pokemonGens]);
 
   useEffect(() => {
