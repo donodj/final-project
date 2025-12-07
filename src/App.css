@@ -105,7 +105,7 @@
   background-color: rgba(230, 185, 104, 0.637);
   box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.438);
   border-radius: 10px;
-  width: 200px;
+  width: 250px;
   padding: 15px 15px;
   display: flex;
   flex-direction: column;
@@ -113,9 +113,15 @@
   gap: 10px;
 }
 
-.stats-container > h2, p {
+.stats-container h2,
+.stats-container p {
   text-align: left;
   margin: 0;
+}
+
+.guess-time {
+  font-size: 21px;
+  color: rgb(255, 255, 0);
 }
 
 .control-buttons {

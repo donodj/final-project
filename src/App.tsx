@@ -119,7 +119,7 @@ function App() {
           <div className='stats-container'>
             <h2>Statistics</h2>
             <hr></hr>
-            <p>{`Guess Time: ${getTimeString(elapsedTime)} sec`}</p>
+            <p className='guess-time'>{`Guess Time: ${getTimeString(elapsedTime)} sec`}</p>
             <p>{`Best Time: ${getTimeString(bestTime)} sec`}</p>
             <p>{`Correct Guesses: ${correctGuesses}`}</p>
             <p>{`Total Guesses: ${totalGuesses}`}</p>
