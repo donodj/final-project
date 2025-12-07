@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Globals } from './Globals';
 import { getTimeString, useStopwatch } from './Stopwatch';
 import { Difficulty, type GameSettingsState } from './GameSettings';
-import { GameClient, PokemonClient } from 'pokenode-ts';
+import { GameClient } from 'pokenode-ts';
 import levenshtein from 'js-levenshtein';
 
 export type Pokemon = {
   id: number;
   name: string;
+  cry: string;
 }
 
 export const GuessOutcome = {
@@ -24,6 +25,7 @@ const getSpriteUrl = (pokemon: Pokemon) => {
 const NULL_POKEMON: Pokemon = {
   id: 0,
   name: 'MISSINGNO.',
+  cry: "",
 };
 
 const MIN_SPELLING_MATCH = 0.75;
@@ -38,13 +40,13 @@ type GameStats = {
 const DEFAULT_STATS = {bestTime: -1, totalGuesses: 0, correctGuesses: 0};
 
 const gameClient = new GameClient();
-const pokeClient = new PokemonClient();
+// const pokeClient = new PokemonClient();
 
 export function usePokemonGame(gameSettings: GameSettingsState) {
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const pokemonGens = useRef<Pokemon[][]>([]);
-  
+
   const [currentPokemon, setCurrentPokemon] = useState(NULL_POKEMON);
   const [isPokemonHidden, setIsPokemonHidden] = useState(true);
   const [isAwaitingAnswer, setIsAwaitingAnswer] = useState(false);
@@ -71,8 +73,10 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
         const genData = await gameClient.getGenerationById(i + 1);
 
         const newList: Pokemon[] = genData.pokemon_species.map((item: any, _) => ({
-          id: -1, // Is set later to save on API calls
+          // Id and cry are set later to save on API calls
+          id: -1,
           name: item.name,
+          cry: "",
         }));
         console.log(`Gen ${i + 1}: ${newList.length} Pokemon`);
         pokemonGens.current.push(newList);
@@ -82,7 +86,9 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
       console.log(pokemonGens.current);
     };
 
-    initializePokemonLists();
+    if (pokemonGens.current.length <= 0) {
+      initializePokemonLists();
+    }
   }, []);
 
   useEffect(() => {
@@ -110,24 +116,34 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     gameSettings.selectedGens.forEach((val, idx) => {
       if (val) genChoices.push(idx);
     });
+
     // Choose random generation
     const randIdx = Globals.randomArrElement(genChoices);
     if (randIdx === null) {
       return NULL_POKEMON;
     }
+
     console.log(`Choosing Pokemon from Gen ${randIdx + 1}`)
     // Get random Pokemon in that generation
     const randPokemon = Globals.randomArrElement(pokemonGens.current[randIdx]);
-    if (randPokemon) {
-      // Set the id if not already set
-      if (randPokemon.id < 0) {
-        randPokemon.id = (await pokeClient.getPokemonSpeciesByName(randPokemon.name)).id;
-      }
-      return randPokemon;
-    } else {
-      // If failed to pick, return null pokemon
+
+    // If failed to pick, return null pokemon
+    if (randPokemon === null) {
       return NULL_POKEMON;
     }
+
+    // Set id and cry if not already set
+    if (randPokemon.id < 0 || randPokemon.cry === "") {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randPokemon.name}`);
+      const data = await response.json();
+
+      randPokemon.id = data.id;
+
+      const cries = data.cries;
+      const cryUrl = cries?.latest || cries?.legacy;
+      if (cryUrl) randPokemon.cry = cryUrl;
+    }
+      return randPokemon;
   }
 
   const isPokemonValid = (pokemon: Pokemon = currentPokemon) => {
@@ -166,6 +182,14 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     resetTimer();
     // startTimer();
     setIsAwaitingAnswer(true);
+  };
+
+  const playPokemonCry = () => {
+    if (currentPokemon.cry !== "") {
+      const audio = new Audio(currentPokemon.cry);
+      audio.volume = 0.33;
+      audio.play();
+    }
   };
 
   const handleGuessEntryChange = (event: any) => {
@@ -237,6 +261,7 @@ export function usePokemonGame(gameSettings: GameSettingsState) {
     isPokemonValid,
     revealPokemon,
     loadNewPokemon,
+    playPokemonCry,
     handleGuessEntryChange,
     checkGuess,
   };

@@ -36,6 +36,7 @@ function App() {
     isPokemonValid,
     revealPokemon,
     loadNewPokemon,
+    playPokemonCry,
     handleGuessEntryChange,
     checkGuess,
   } = usePokemonGame(gameSettings);
@@ -72,7 +73,7 @@ function App() {
               }}
               style={{
                 filter: isPokemonHidden ? 'brightness(0)' : 'brightness(1)',
-                visibility: isImgLoaded && isPokemonValid() ? 'visible' : 'hidden'
+                visibility: isImgLoaded && isPokemonValid() && (gameSettings.difficulty !== Difficulty.Hard || !isPokemonHidden) ? 'visible' : 'hidden'
               }}
             />
             <span
@@ -111,6 +112,7 @@ function App() {
               placeholder='Guess the name...'
               ref={inputRef}
             />
+            <button className='sound-button' onClick={playPokemonCry}>🔊</button>
             <button onClick={checkGuess} disabled={!isAwaitingAnswer}>Submit</button>
           </div>
 
